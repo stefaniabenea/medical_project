@@ -1,0 +1,9 @@
+torch
+torchvision
+albumentations
+numpy
+matplotlib
+pandas
+scikit-learn
+Pillow
+argparse
