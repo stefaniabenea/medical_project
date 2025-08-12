@@ -20,10 +20,10 @@ It includes both a custom CNN model and a pretrained ResNet18, an API for infere
 ## Installation and Setup
 
 1. **Clone the repository**  
-   ```
-   git clone https://github.com/user/lung-disease-classification.git
-   cd lung-disease-classification
-   ```
+```
+git clone https://github.com/user/lung-disease-classification.git
+cd lung-disease-classification
+```
 
 2. **Create a virtual environment and install dependencies**
 
@@ -34,7 +34,7 @@ pip install -r requirements.txt
 ```
 
 3. **Dataset folder structure**
-
+```
 data/
     Normal/
         img1.jpg
@@ -46,7 +46,7 @@ data/
         ...
     Pneumonia_Viral/
         ...
-
+```
 ##  Training
 
 ### Custom CNN
