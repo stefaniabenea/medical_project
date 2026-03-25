@@ -8,33 +8,42 @@ from utils import get_albumentations_transforms, get_model
 import uvicorn
 from fastapi.encoders import jsonable_encoder
 import os
-import argparse
+
 
 app = FastAPI()
-parser = argparse.ArgumentParser()
-parser.add_argument("--model_name", type=str, required=True)
-args = parser.parse_args()
-model_name = args.model_name
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class_names = sorted([d for d in os.listdir("data") if os.path.isdir(os.path.join("data", d))])
 
-model = get_model(model_name, num_classes=len(class_names))
-model.load_state_dict(torch.load(f"models/{model_name}.pth", map_location=device))
-model.to(device)
-model.eval()
+cnn_model = get_model("CNN", num_classes=len(class_names))
+cnn_model.load_state_dict(torch.load("models/CNN.pth", map_location=device))
+cnn_model.to(device)
+cnn_model.eval()
 
-transform = get_albumentations_transforms(train=False, model_name=model_name)
+resnet_model = get_model("resnet18", num_classes=len(class_names))
+resnet_model.load_state_dict(torch.load("models/resnet18.pth", map_location=device))
+resnet_model.to(device)
+resnet_model.eval()
+
+
+
 @app.post("/")
 @app.post("/predict/")
-async def predict_image(file: UploadFile = File(...)):
+async def predict_image(file: UploadFile = File(...), model_name: str = "CNN"):
+    if model_name == "CNN":
+        selected_model = cnn_model
+    elif model_name == "resnet18":
+        selected_model = resnet_model
+    else:
+        return JSONResponse({"error": "Invalid model name. Choose 'CNN' or 'resnet18'."}, status_code=400)   
+    transform = get_albumentations_transforms(train=False, model_name=selected_model)
     image_bytes = await file.read()
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     image_np = np.array(image)
     augmented = transform(image=image_np)
     tensor = augmented['image'].unsqueeze(0).to(device)
     with torch.no_grad():
-        output = model(tensor)
+        output = selected_model(tensor)
         pred_idx = torch.argmax(output, dim=1).item()
 
     return JSONResponse({"prediction": class_names[pred_idx]})
